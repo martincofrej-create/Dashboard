@@ -1,0 +1,19 @@
+{
+  "name": "klassik-car-dashboard",
+  "version": "2.0.0",
+  "description": "Dashboard de control digital para Klassik Car — concesionario automotriz",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "Martin Cofre",
+  "license": "UNLICENSED",
+  "private": true
+}
