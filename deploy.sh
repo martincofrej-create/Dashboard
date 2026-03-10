@@ -15,7 +15,7 @@
 set -euo pipefail
 
 # ─── CONFIGURACIÓN (editar según tu proyecto) ───
-PROJECT_ID="${GCP_PROJECT_ID:-klassik-car-dashboard}"
+PROJECT_ID="${GCP_PROJECT_ID:-dasboard-kc}"
 REGION="${GCP_REGION:-us-central1}"
 SERVICE_NAME="klassik-dashboard"
 IMAGE_NAME="gcr.io/${PROJECT_ID}/${SERVICE_NAME}"
