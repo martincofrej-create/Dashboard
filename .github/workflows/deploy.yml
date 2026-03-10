@@ -5,6 +5,8 @@
 # Requisitos: Configurar estos secrets en GitHub:
 #   - GCP_PROJECT_ID      → ID de tu proyecto en Google Cloud
 #   - GCP_SA_KEY          → JSON key de una Service Account con permisos de Cloud Run
+#   - GEMINI_API_KEY      → API key de Google AI Studio para el chat IA
+#                           Obtener en: https://aistudio.google.com/app/apikey
 #
 name: Deploy to Cloud Run
 
@@ -50,7 +52,8 @@ jobs:
             --region ${{ env.REGION }} \
             --port 8080 \
             --memory 256Mi \
-            --allow-unauthenticated
+            --allow-unauthenticated \
+            --set-env-vars GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
 
       - name: Show service URL
         run: |
