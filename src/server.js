@@ -15,16 +15,23 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ─── Gemini AI Chat Proxy ───────────────────────────────────────────────────
+// ─── Gemini AI Chat Proxy (Vertex AI) ───────────────────────────────────────
+const GCP_PROJECT = 'dasboard-kc';
+const GCP_LOCATION = 'us-central1';
+const GEMINI_MODEL = 'gemini-2.0-flash';
+
+// Obtiene access token desde el metadata server de GCP (disponible en Cloud Run)
+async function getGCPAccessToken() {
+  const response = await fetch(
+    'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token',
+    { headers: { 'Metadata-Flavor': 'Google' } }
+  );
+  const data = await response.json();
+  return data.access_token;
+}
+
 app.post('/api/chat', async (req, res) => {
   const { message, history = [] } = req.body;
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (!apiKey) {
-    return res.json({
-      reply: '⚠️ El asistente IA no está configurado. Agrega la variable de entorno GEMINI_API_KEY en Cloud Run.'
-    });
-  }
 
   const systemContext = `Eres el asistente de IA del Dashboard de Control Digital de Klassik Car, un concesionario automotriz en Chile que vende Hyundai, Kia, Suzuki y Changan.
 
@@ -64,13 +71,19 @@ Si te preguntan cómo mejorar algo, da sugerencias concretas y accionables basad
   ];
 
   try {
+    // Usar Vertex AI con credenciales automáticas de Cloud Run
+    const accessToken = await getGCPAccessToken();
+
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://${GCP_LOCATION}-aiplatform.googleapis.com/v1/projects/${GCP_PROJECT}/locations/${GCP_LOCATION}/publishers/google/models/${GEMINI_MODEL}:generateContent`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
         body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemContext }] },
+          systemInstruction: { parts: [{ text: systemContext }] },
           contents,
           generationConfig: {
             temperature: 0.7,
@@ -83,7 +96,7 @@ Si te preguntan cómo mejorar algo, da sugerencias concretas y accionables basad
     const data = await response.json();
 
     if (data.error) {
-      console.error('Gemini API error:', data.error);
+      console.error('Vertex AI error:', data.error);
       return res.json({ reply: `Error de la API: ${data.error.message}` });
     }
 
